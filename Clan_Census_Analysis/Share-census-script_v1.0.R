@@ -1,1 +1,309 @@
-# text
+# set your working directory
+setwd("/path/to/directory")
+
+# define filename 
+filename <- "census_sampledata.txt"
+
+read.table(filename, header=T, stringsAsFactors=F) -> csus
+
+# denote ancient or modern in a new column 
+csus$Breed_Type <- ifelse(
+csus$Breed == "Aberration" | 
+csus$Breed == "Aether" | 
+csus$Breed == "Auraboa" | 
+csus$Breed == "Banescale" | 
+csus$Breed == "Cirrus" | 
+csus$Breed == "Dusthide" | 
+csus$Breed == "Everlux" | 
+csus$Breed == "Gaoler" | 
+csus$Breed == "Sandsurge" | 
+csus$Breed == "Thorntail" | 
+csus$Breed == "Undertide" | 
+csus$Breed == "Veilspun", 
+"Ancient", "Modern")
+
+## find and order frequencies of element, ancient vs modern, and breed 
+
+atts <- c("Element", "Breed_Type", "Breed") 
+varnames <- c("elem", "btype", "breed")
+
+for(i in 1:3){
+data.frame(table(csus[[atts[i]]])) -> attsf
+colnames(attsf)[colnames(attsf) == "Var1"] <- atts[i]
+attsf[order(-attsf$Freq),] -> oattsf
+assign(paste("o",varnames[i],"f",sep=""), oattsf)
+}
+
+# load element colors 
+elemhex <- data.frame(
+Element = c("Arcane", "Earth", "Fire", "Ice", "Light", "Lightning", "Nature", "Plague", "Shadow", "Water", "Wind"), 
+Hex = c("a64682", "9D7A61", "dd5531", "FEFEFF", "f4ddac", "42987d", "4e8b40", "892628", "664f8b", "3490c9", "d1df87"))
+
+merge(oelemf, elemhex, by="Element", all=TRUE) -> bigex
+bigex$Freq[is.na(bigex$Freq)] <- 0
+bigex[order(bigex$Freq),] -> obex
+paste("#", obex$Hex, sep="") -> obexh
+
+# plot element frequencies 
+
+# png("elem_dist_flat.png", height=800, width=1200)
+# par(mar = c(1, 12, 1, 6), bg="transparent")
+# elembar <- barplot(obex$Freq, horiz=T, col=obexh, xaxs="i", yaxs="i", xaxt="n", yaxt="n", border=NA, space=0)
+# text(y=elembar, x=-1, labels=obex$Element, cex=3, xpd=T, srt=0, adj=c(1, 0.5))
+# text(y=elembar, x=obex$Freq + 1, labels=obex$Freq, cex=3, xpd=T, srt=0, adj=c(0, 0.5))
+# dev.off()
+
+# plot top five breed frequencies 
+
+obreedf[1:5,] -> obfs
+
+# png("breed_dist_flat.png", height=1200, width=1200)
+# par(mar = c(5, 3, 15, 3), bg="white", lwd=3)
+# breedb <- barplot(obfs$Freq, col="orange", xaxs="i", yaxs="i", xaxt="n", yaxt="n", space=0.2)
+# text(x=breedb, y=-0.5, labels=obfs$Breed, cex=3, xpd=T, srt=0, adj=c(0.5, 0.5))
+# text(x=breedb, y=obfs$Freq + 0.5, labels=obfs$Freq, cex=3, xpd=T, srt=0, adj=c(0.5, 0.5))
+# dev.off()
+
+# subset prim/sec/tert info
+csus[,c("P_Color", "P_Gene")] -> prim
+csus[,c("S_Color", "S_Gene")] -> sec
+csus[,c("T_Color", "T_Gene")] -> tert
+
+slots <- c("prim", "sec", "tert")
+for(i in slots){
+x=get(i)
+colnames(x) <- c("Color", "Gene")
+assign(i,x)
+}
+
+## Color data
+
+slotsA <- c("prim", "sec")
+slotsB <- c("tert")
+
+# find and order frequencies of prim and sec colors
+for(i in slotsA){
+x=get(i)
+data.frame(table(x$Color)) -> colt
+colnames(colt)[colnames(colt) == "Var1"] <- "Color"
+assign(paste(i,"colt",sep=""),colt)
+x=get(paste(i,"colt",sep=""))
+x[order(-x$Freq),] -> colto
+assign(paste(i,"colto",sep=""),colto)
+}
+
+# find and order frequencies of tert colors (basic gene removed)
+for(i in slotsB){
+x=get(i)
+x[grep("Basic", x$Gene, invert=TRUE),] -> colpos 
+assign(paste(i,"colpos",sep=""),colpos)
+x=get(paste(i,"colpos",sep=""))
+data.frame(table(x$Color)) -> colt
+colnames(colt)[colnames(colt) == "Var1"] <- "Color"
+assign(paste(i,"colt",sep=""),colt)
+x=get(paste(i,"colt",sep=""))
+x[order(-x$Freq),] -> colto
+assign(paste(i,"colto",sep=""),colto)
+}
+
+# find and order frequencies of all colors (tert colors with basic gene removed)
+c(prim$Color, sec$Color, tertcolpos$Color) -> allcolpos
+data.frame(table(allcolpos)) -> acolt
+acolt[order(-acolt$Freq),] -> acolto 
+colnames(acolto)[colnames(acolto) == "allcolpos"] <- "Color"
+dim(acolto)[1]/177
+
+# add color combo column to dataframe
+csus$Col_Combo <- paste(csus$P_Color, csus$S_Color, csus$T_Color, sep="_")
+data.frame(table(csus$Col_Combo)) -> tccombo
+tccombo[order(-tccombo$Freq),] -> otccombo
+otccombo[c(otccombo$Freq > 1),]
+
+# add color pattern column in dataframe
+csus$Col_Patt <- ifelse(
+csus$P_Color == csus$S_Color & csus$P_Color != csus$T_Color, "xxy", ifelse(
+csus$P_Color == csus$T_Color & csus$P_Color != csus$S_Color, "xyx", ifelse(
+csus$S_Color == csus$T_Color & csus$P_Color != csus$T_Color, "xyy", ifelse(
+csus$P_Color == csus$S_Color & csus$P_Color == csus$T_Color, "xxx", 
+"xyz"))))
+
+# define all doubles as "Double" in another column
+csus$Col_Mult <- ifelse(
+csus$Col_Patt == "xxx", "Triple", ifelse(
+csus$Col_Patt == "xyz", "XYZ", 
+"Double"))
+
+# frequencies of color patterns
+data.frame(table(csus$Col_Patt)) -> cpatt
+
+## Gene data 
+
+# find and order frequencies of prim, sec, and tert genes
+for(i in slots){
+x=get(i)
+data.frame(table(x$Gene)) -> genet
+colnames(genet)[colnames(genet) == "Var1"] <- "Gene"
+assign(paste(i,"genet",sep=""),genet)
+x=get(paste(i,"genet",sep=""))
+x[order(-x$Freq),] -> geneto
+assign(paste(i,"geneto",sep=""),geneto)
+}
+
+# find and order frequencies of all genes
+c(prim$Gene, sec$Gene, tert$Gene) -> allgene
+data.frame(table(allgene)) -> agenet
+agenet[order(-agenet$Freq),] -> ageneto 
+colnames(ageneto)[colnames(ageneto) == "allgene"] <- "Gene"
+
+# add gene combo column to dataframe
+csus$Gene_Combo <- paste(csus$P_Gene, csus$S_Gene, csus$T_Gene, sep="_")
+data.frame(table(csus$Gene_Combo)) -> tgcombo
+tgcombo[order(-tgcombo$Freq),] -> otgcombo
+otgcombo[c(otgcombo$Freq > 1),]
+
+## Color graphs
+
+# load hex colors
+read.table("allcolors_hex.txt", header=T, stringsAsFactors=F) -> colz
+colnames(colz)[colnames(colz) == "Name"] <- "Color"
+
+merge(colz, acolto, by="Color", all=TRUE) -> bigcolz
+bigcolz$Freq[is.na(bigcolz$Freq)] <- 0
+
+# plot full range of colors and frequencies 
+
+bigcolz[order(-bigcolz$Number),] -> obcol
+paste("#", obcol$Hex, sep="") -> obcolhex
+
+## bar graph
+# png("color_dist_flat.png", height=3200, width=800)
+# par(mar = c(1, 5, 1, 2), bg="transparent")
+# flatbar <- barplot(obcol$Freq, horiz=T, col=obcolhex, xaxs="i", yaxs="i", xaxt="n", yaxt="n", # border=NA, space=0)
+# text(y=flatbar, x=-0.5, labels=obcol$Color, cex=1, xpd=T, srt=0, adj=c(1, 0.5))
+# text(y=flatbar, x=obcol$Freq + 0.5, labels=obcol$Freq, cex=1, xpd=T, srt=0, adj=c(0, 0.5))
+# dev.off()
+### cex is text size, srt is rotation, adj left-aligns, then centers the text on the bar
+
+## pie chart 
+# png("color_dist_pie.png", height=800, width=800)
+# par(mar = c(1, 1, 1, 1), bg="transparent")
+# pie(obcol$Freq, col=obcolhex, labels=NA, xaxs="i", yaxs="i", border=NA)
+# dev.off()
+
+# plot color frequencies in order
+
+bigcolz[order(-bigcolz$Freq),] -> fcol
+fcol[fcol$Freq > 0,] -> pfcol
+fcol[fcol$Freq < 1,] -> fcoln
+pfcol[order(pfcol$Freq),] -> npfcol
+paste("#", npfcol$Hex, sep="") -> npfcolhex
+
+# png("color_dist_ordered.png", height=2400, width=800)
+# par(mar = c(1, 5, 1, 2), bg="transparent")
+# ordbar <- barplot(npfcol$Freq, horiz=T, col=npfcolhex, xaxs="i", yaxs="i", xaxt="n", yaxt="n", border=NA, space=0)
+# text(y=ordbar, x=-0.5, labels=npfcol$Color, cex=1, xpd=T, srt=0, adj=c(1, 0.5))
+# text(y=ordbar, x=npfcol$Freq + 0.5, labels=npfcol$Freq, cex=1, xpd=T, srt=0, adj=c(0, 0.5))
+# dev.off()
+
+
+## save updated csus
+# write.table(csus, "clancensus_more.txt", row.names=FALSE, quote=FALSE, sep="\t")
+
+## defining search functions
+# csearch = return rows that match at least one string (the "OR" operator)
+# qsearch = return names that match at least one string (the "OR" operator)
+# cmatch = return rows that match every string (the "AND" operator)
+# qmatch = return names that match every string (the "AND" operator)
+
+csearch <- function(...){
+x <- list(...)
+edf <- data.frame(Name=character())
+for(i in x){
+rd <- csus[apply(csus, 1, function(row) any(grepl(i, row))), ]
+rbind(edf, rd) -> edf
+}
+print(edf)
+}
+
+qsearch <- function(...){
+x <- list(...)
+edf <- data.frame(Name=character())
+for(i in x){
+qd <- csus[apply(csus, 1, function(row) any(grepl(i, row))), "Name"]
+as.data.frame(qd) -> dqd
+names(dqd) <- "Name"
+rbind(edf, dqd) -> edf
+}
+print(edf)
+}
+
+cmatch <- function(breed="", btype="", gend="", pcol="", pgene="", scol="", sgene="", tcol="", tgene="", elem="", cpatt="", col1="", col2="", col3="", cmult="", is.Basic=NULL){
+matchy <- csus[grepl(breed, csus$Breed) & 
+grepl(btype, csus$Breed_Type) & 
+grepl(gend, csus$Gender) & 
+grepl(pcol, csus$P_Color) & 
+grepl(pgene, csus$P_Gene) & 
+grepl(scol, csus$S_Color) & 
+grepl(sgene, csus$S_Gene) & 
+grepl(tcol, csus$T_Color) & 
+grepl(tgene, csus$T_Gene) & 
+grepl(elem, csus$Element) & 
+grepl(cpatt, csus$Col_Patt) & 
+grepl(col1, csus$Col_Combo) & # match a color regardless of slot
+grepl(col2, csus$Col_Combo) & # match another color regardless of slot
+grepl(col3, csus$Col_Combo) & # match another color regardless of slot
+grepl(cmult, csus$Col_Mult), ]
+if (!is.null(is.Basic)) {
+matchy[grepl("Basic", matchy$Gene_Combo) == is.Basic, ]
+} else {
+print(matchy)
+}
+}
+
+qmatch <- function(breed="", btype="", gend="", pcol="", pgene="", scol="", sgene="", tcol="", tgene="", elem="", cpatt="", col1="", col2="", col3="", cmult="", is.Basic=NULL){
+matchy <- csus[grepl(breed, csus$Breed) & 
+grepl(btype, csus$Breed_Type) & 
+grepl(gend, csus$Gender) & 
+grepl(pcol, csus$P_Color) & 
+grepl(pgene, csus$P_Gene) & 
+grepl(scol, csus$S_Color) & 
+grepl(sgene, csus$S_Gene) & 
+grepl(tcol, csus$T_Color) & 
+grepl(tgene, csus$T_Gene) & 
+grepl(elem, csus$Element) & 
+grepl(cpatt, csus$Col_Patt) & 
+grepl(col1, csus$Col_Combo) & # match a color regardless of slot
+grepl(col2, csus$Col_Combo) & # match another color regardless of slot
+grepl(col3, csus$Col_Combo) & # match another color regardless of slot
+grepl(cmult, csus$Col_Mult),]
+if (!is.null(is.Basic)) {
+basch <- matchy[grepl("Basic", matchy$Gene_Combo) == is.Basic, "Name"]
+} else {
+basch <- matchy[, "Name"]
+}
+as.data.frame(basch) -> dmy
+names(dmy) <- "Matches"
+print(dmy)
+}
+
+### glossary of objects ###
+
+## Variables
+# csus = the whole table 
+# oelemf = element frequency
+# obtypef = ancient vs modern frequencies
+# obreedf = most used breeds
+# (prim/sec/tert)colto = most used color in each slot 
+# acolto = most used color 
+# otccombo = most used color combo
+# cpatt = color pattern counts
+# (prim/sec/tert)geneto = most used gene in each slot 
+# ageneto = most used gene
+# otgcombo = most used gene combo
+# fcoln = colors you don't have 
+
+## Functions
+# csearch = return rows that match at least one string (the "OR" operator)
+# qsearch = return names that match at least one string (the "OR" operator)
+# cmatch = return rows that match every string (the "AND" operator)
+# qmatch = return names that match every string (the "AND" operator)
