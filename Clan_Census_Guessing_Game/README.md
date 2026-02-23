@@ -27,6 +27,7 @@ On your computer using your preferred spreadsheet editor, create a table contain
 * T_Color = tertiary color 
 * T_Gene = tertiary gene
 * Element = element
+
 Fill out your clan's info and save it as a tab-delimited text file. You can find a sample of what the file should look like in
 
 *censusgame_sampledata.txt*
