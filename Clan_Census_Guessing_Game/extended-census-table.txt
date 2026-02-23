@@ -1,0 +1,11 @@
+Name	Breed	Gender	P_Color	P_Gene	S_Color	S_Gene	T_Color	T_Gene	Element	Breed_Type	Col_Combo	Col_Patt	Gene_Combo
+Lan	Skydancer	M	Spearmint	Tide	Abyss	Constellation	Navy	Flecks	Earth	Modern	Spearmint_Abyss_Navy	xyz	Tide_Constellation_Flecks
+Renolo	Sandsurge	M	Pumpkin	Cherub	Caramel	Blaze	Driftwood	Augment	Lightning	Ancient	Pumpkin_Caramel_Driftwood	xyz	Cherub_Blaze_Augment
+Rahal	Coatl	M	Azure	Harlequin	Bronze	Safari	Azure	Glowtail	Arcane	Modern	Azure_Bronze_Azure	xyx	Harlequin_Safari_Glowtail
+Nenya	Aether	F	Rose	Clown	Camo	Blend	Camo	Wish	Arcane	Ancient	Rose_Camo_Camo	xyy	Clown_Blend_Wish
+Maokai	Tundra	F	Blue	Falcon	Avocado	Weaver	Blush	Spines	Plague	Modern	Blue_Avocado_Blush	xyz	Falcon_Weaver_Spines
+Tors	Auraboa	M	Mist	Mochlus	Caribbean	Seraph	Orca	Spines	Nature	Ancient	Mist_Caribbean_Orca	xyz	Mochlus_Seraph_Spines
+Cumulus	Gaoler	F	Charcoal	Caterpillar	Charcoal	Rosette	Charcoal	Wintercoat	Earth	Ancient	Charcoal_Charcoal_Charcoal	xxx	Caterpillar_Rosette_Wintercoat
+Chait	Tundra	F	Carrot	Falcon	Carrot	Lode	Carrot	Underbelly	Nature	Modern	Carrot_Carrot_Carrot	xxx	Falcon_Lode_Underbelly
+Serania	Pearlcatcher	F	Stonewash	Lionfish	Fire	Tear	Flint	Smirch	Water	Modern	Stonewash_Fire_Flint	xyz	Lionfish_Tear_Smirch
+Fluxwing	Tundra	M	Ruby	Tide	Cornflower	Morph	Blood	Ghost	Wind	Modern	Ruby_Cornflower_Blood	xyz	Tide_Morph_Ghost
